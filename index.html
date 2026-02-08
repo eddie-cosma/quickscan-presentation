@@ -92,7 +92,6 @@
             <li>Async Operations</li>
             <li>Real-World Integration</li>
             <li>User Experience</li>
-            <li>Practical Patterns</li>
           </ul>
         
             <aside class="notes">
@@ -203,12 +202,18 @@
           </section>
 
           <section>
+            <h2>Example: spotify-tui</h2>
+            <img src="assets/spotify-tui.gif">
+            <small><a href="https://github.com/Rigellute/spotify-tui">https://github.com/Rigellute/spotify-tui</a></small>
+          </section>
+
+          <section>
             <h2>When TUIs Shine</h2>
             <ul>
               <li class="fragment" style="margin-bottom: 0;"><strong>System administration tools</strong><br>
-                <small>htop, btop, lazygit, lazydocker</small></li>
+                <small>htop, btop, BIOS setup utilities</small></li>
               <li class="fragment" style="margin-bottom: 0;"><strong>Developer utilities</strong><br>
-                <small>tig, k9s, ranger, midnight commander</small></li>
+                <small>lazygit, lazydocker, k9s, ranger, midnight commander</small></li>
               <li class="fragment" style="margin-bottom: 0;"><strong>SSH-accessible applications</strong><br>
                 <small>Remote servers without X forwarding</small></li>
               <li class="fragment" style="margin-bottom: 0;"><strong>Low-resource environments</strong><br>
@@ -264,6 +269,13 @@
                 <td>Full applications</td>
               </tr>
             </table>
+
+            <aside class="notes">
+              <ul>
+                <li>Curses has been around forever—since 1978. It's part of the standard library on Linux and MacOS.</li>
+
+              </ul>
+            </aside>
           </section>
 
           <section>
@@ -291,9 +303,6 @@
             <h2>Installation</h2>
             <pre><code class="language-bash"># Using pip
 pip install textual
-
-# Using uv (recommended)
-uv add textual
 
 # For development with devtools
 pip install textual-dev</code></pre>
@@ -336,7 +345,6 @@ class QuickScan(App[None]):
         self.scan_directory = scan_directory
         self.selected_scanner: str = "..."</code></pre>
             <ul class="fragment" style="font-size: 0.8em;">
-              <li><code>App[None]</code> - Type hint for return value</li>
               <li><code>CSS_PATH</code> - Links external stylesheet</li>
               <li><code>__init__</code> - Initialize app state</li>
             </ul>
@@ -513,6 +521,14 @@ Container {
             <div class="pro-tip fragment">
               <strong>Devtools:</strong> <code>textual run --dev app.py</code> opens CSS inspector with F12
             </div>
+
+          <aside class="notes">
+            <ul>
+              <li>Units are the biggest difference with regular CSS. There is no concept of pixels or em units.</li>
+              <li>Unitless values can be used to represent "cells", i.e., terminal characters.</li>
+              <li>Percent and viewport units (vw/vh) are also available.</li>
+            </ul>
+          </aside>
           </section>
 
           <section>
@@ -550,10 +566,9 @@ scanner_load_bar.display = False</code></pre>
               <strong>Problem:</strong> Scanner detection takes ~20 seconds
             </div>
             <div class="fragment">
-              <p>We can't block the UI! Users need to:</p>
+              <p>We can't block the UI! We want to:</p>
               <ul>
                 <li>See that something is happening</li>
-                <li>Possibly cancel the operation</li>
                 <li>Use other parts of the interface</li>
               </ul>
             </div>
@@ -620,7 +635,8 @@ self.run_worker(run_scan(), exclusive=True)</code></pre>
 
           <section>
             <h2>Real-Time Scan Output</h2>
-            <pre><code class="language-python">scan_process = await asyncio.create_subprocess_shell(
+            <pre><code class="language-python"># in async scan() method of Scanner class
+scan_process = await asyncio.create_subprocess_shell(
     cmd=cmd,
     stderr=asyncio.subprocess.STDOUT,  # Merge streams
     stdout=asyncio.subprocess.PIPE,
@@ -1017,292 +1033,27 @@ def on_input_submitted(self, event: Input.Submitted):
           </section>
         </section>
 
-        <!-- Part 6: Practical Patterns -->
-        <section>
-          <section>
-            <h1>Part 6</h1>
-            <h2>Practical Patterns</h2>
-            <p>Reusable code for your projects</p>
-          </section>
-
-          <section>
-            <h2>Pattern: Device Detection</h2>
-            <pre><code class="language-python">async def get_available_devices() -> list[tuple[str, str]]:
-    try:
-        process = await asyncio.create_subprocess_exec(
-            "some-command", "--list",
-            stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE,
-        )
-        stdout, _ = await asyncio.wait_for(
-            process.communicate(),
-            timeout=20
-        )
-        if process.returncode == 0:
-            devices = parse_output(stdout.decode())
-            return devices if devices else [("No devices found", "")]
-        return [("Error detecting devices", "")]
-    except asyncio.TimeoutError:
-        return [("Timeout detecting devices", "")]
-    except Exception as e:
-        return [(f"Error: {str(e)}", "")]</code></pre>
-          </section>
-
-          <section>
-            <h2>Pattern: Background Loading</h2>
-            <pre><code class="language-python">class MyApp(App):
-    def on_mount(self):
-        # Start background tasks when app loads
-        self.run_worker(self.load_data(), exclusive=False)
-
-    async def load_data(self):
-        # Show loading state
-        self.query_one("#loading").display = True
-
-        # Do async work
-        data = await fetch_data()
-
-        # Update UI
-        self.query_one("#data-view").update(data)
-
-        # Hide loading state
-        self.query_one("#loading").display = False</code></pre>
-          </section>
-
-          <section>
-            <h2>Pattern: Custom Messages</h2>
-            <pre><code class="language-python">from textual.message import Message
-
-class MyWidget(Widget):
-    class ItemSelected(Message):
-        def __init__(self, item: Item) -> None:
-            self.item = item
-            super().__init__()
-
-    def select_item(self, item):
-        # Post message - bubbles up to parent/app
-        self.post_message(self.ItemSelected(item))
-
-class MyApp(App):
-    def on_my_widget_item_selected(self, message):
-        # Handle the message
-        item = message.item
-        self.do_something_with(item)</code></pre>
-          </section>
-
-          <section>
-            <h2>Pattern: Thread-Safe Updates</h2>
-            <pre><code class="language-python">class MyApp(App):
-    def run_background_task(self):
-        progress = self.query_one(ProgressBar)
-        log = self.query_one(Log)
-
-        def update_progress(value: int):
-            self.call_later(progress.update, value)
-
-        def log_message(msg: str):
-            self.call_later(log.write, msg)
-
-        async def task():
-            for i in range(100):
-                await asyncio.sleep(0.1)
-                update_progress(i)
-                log_message(f"Step {i}\n")
-
-        self.run_worker(task())</code></pre>
-          </section>
-
-          <section>
-            <h2>Pattern: Temp File Workflow</h2>
-            <pre><code class="language-python">from tempfile import TemporaryDirectory
-from pathlib import Path
-
-async def process_files():
-    with TemporaryDirectory() as temp_dir:
-        temp_path = Path(temp_dir)
-
-        # Write intermediate files
-        for i, data in enumerate(items):
-            (temp_path / f"item{i}.tmp").write_bytes(data)
-
-        # Process all files
-        results = []
-        for f in sorted(temp_path.glob("*.tmp")):
-            results.append(process(f))
-
-        # Write final output
-        output_path = Path.cwd() / "output.pdf"
-        save_results(results, output_path)
-
-    # temp_dir is automatically deleted here!</code></pre>
-          </section>
-
-          <section>
-            <h2>Pattern: Graceful Error Handling</h2>
-            <pre><code class="language-python">async def safe_operation():
-    log = self.query_one(Log)
-
-    try:
-        result = await risky_operation()
-        log.write(f"Success: {result}\n")
-    except TimeoutError:
-        log.write("Operation timed out. Please try again.\n")
-    except PermissionError:
-        log.write("Permission denied. Check your access.\n")
-    except Exception as e:
-        log.write(f"Unexpected error: {e}\n")
-        # Log full traceback for debugging
-        import traceback
-        log.write(traceback.format_exc())</code></pre>
-          </section>
-
-          <section>
-            <h2>Project Structure</h2>
-            <pre style="font-size: 0.55em;"><code class="language-text">my-tui-app/
-├── src/
-│   └── myapp/
-│       ├── __init__.py
-│       ├── __main__.py      # Entry point
-│       ├── app.py           # Main Textual app
-│       ├── app.tcss         # Styles
-│       ├── widgets/         # Custom widgets
-│       │   ├── __init__.py
-│       │   └── selector.py
-│       └── backend/         # Business logic
-│           ├── __init__.py
-│           └── operations.py
-├── tests/
-├── pyproject.toml
-└── README.md</code></pre>
-          </section>
-
-          <section>
-            <h2>pyproject.toml Setup</h2>
-            <pre><code class="language-toml">[project]
-name = "myapp"
-version = "0.1.0"
-requires-python = ">=3.12"
-dependencies = [
-    "textual>=6.3.0",
-    "pillow>=12.1.0",
-]
-
-[project.scripts]
-myapp = "myapp.__main__:main"
-
-# Include CSS files in package
-[tool.hatch.build.targets.wheel]
-packages = ["src/myapp"]
-
-[tool.hatch.build.targets.wheel.sources]
-"src" = ""</code></pre>
-          </section>
-        </section>
-
-        <!-- Demo -->
-        <section>
-          <section>
-            <h1>Demo Time!</h1>
-            <pre><code class="language-bash"># Clone the repo
-git clone https://github.com/eddie-cosma/quick-scan
-
-# Install with uv
-cd quick-scan
-uv sync
-
-# Run
-uv run quickscan</code></pre>
-          </section>
-
-          <section>
-            <h2>Demo</h2>
-            <video controls src="assets/demo.mp4"></video>
-          </section>
-
-          <section>
-            <h2>Scanner Output</h2>
-            <iframe src="assets/scan.pdf" style="width: 100vw; height: 50vh;"></iframe>
-          </section>
-        </section>
-
-        <!-- Tips & Best Practices -->
-        <section>
-          <section>
-            <h2>Tips & Best Practices</h2>
-          </section>
-
-          <section>
-            <h2>Development Workflow</h2>
-            <pre><code class="language-bash"># Install dev tools
-pip install textual-dev
-
-# Run with hot reload
-textual run --dev myapp.py
-
-# Open devtools (while app is running)
-# Press F12 or use textual console</code></pre>
-          </section>
-
-          <section>
-            <h2>Debugging Tips</h2>
-            <ul>
-              <li class="fragment">Use <code>textual console</code> for live debugging</li>
-              <li class="fragment">Add <code>log.write()</code> calls for tracing</li>
-              <li class="fragment">Check CSS with devtools (F12)</li>
-              <li class="fragment">Use <code>--dev</code> flag for better error messages</li>
-              <li class="fragment">Type hints help catch widget query errors</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>Performance Tips</h2>
-            <ul>
-              <li class="fragment">Use workers for I/O operations</li>
-              <li class="fragment"><code>exclusive=True</code> for sequential operations</li>
-              <li class="fragment">Batch widget updates when possible</li>
-              <li class="fragment">Use <code>Log</code> widget for streaming output</li>
-              <li class="fragment">Clean up resources (close files, images)</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>Common Pitfalls</h2>
-            <div class="warning">
-              <ul>
-                <li><strong>Blocking the event loop</strong> - Always use async for I/O</li>
-                <li><strong>Direct widget updates from threads</strong> - Use call_later()</li>
-                <li><strong>Missing CSS file</strong> - Check CSS_PATH is correct</li>
-                <li><strong>Widget not found</strong> - Verify ID matches exactly</li>
-              </ul>
-            </div>
-          </section>
-        </section>
-
         <!-- Resources -->
         <section>
           <h2>Resources</h2>
           <ul>
             <li><strong>Textual Docs:</strong> <a href="https://textual.textualize.io">textual.textualize.io</a></li>
-            <li><strong>Widget Gallery:</strong> <a href="https://textual.textualize.io/widget_gallery/">textual.textualize.io/widget_gallery</a></li>
-            <li><strong>GitHub:</strong> <a href="https://github.com/Textualize/textual">github.com/Textualize/textual</a></li>
-            <li><strong>Discord:</strong> Textual community</li>
-            <li><strong>This Project:</strong> <a href="https://github.com/yourusername/quick-scan">github.com/.../quick-scan</a></li>
+            <li><strong>This Project:</strong> <a href="https://github.com/eddie-cosma/quick-scan">github.com/eddie-cosma/quick-scan</a></li>
+            <li><strong>This presentation:</strong> <a href="https://github.com/eddie-cosma/quickscan-presentation">github.com/eddie-cosma/quickscan-presentation</a><br>
+            <img src="assets/qr-presentation.gif" style="width: 20%;"></li>
           </ul>
         </section>
 
         <!-- Q&A -->
         <section>
           <h1>Questions?</h1>
-          <p style="margin-top: 2em;">
-            <strong>Eddie Cosma</strong><br>
-            <small>github.com/yourusername</small>
-          </p>
         </section>
 
         <!-- Thank You -->
         <section>
-          <h1>Thank You!</h1>
-          <p>Happy TUI building!</p>
+          <h2>Join the Cleveland Tech Slack</h2>
+          <p><a href="https://cleveland-tech.vercel.app/">cleveland-tech.vercel.app</a></p>
+          <img src="assets/qr-tech-slack.gif" style="width: 30%;">
         </section>
 
       </div>
