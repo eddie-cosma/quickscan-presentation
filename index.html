@@ -1,0 +1,1273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Text-Based User Interfaces with Textual</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+      .reveal h1, .reveal h2, .reveal h3 {
+        text-transform: none;
+      }
+      .reveal pre {
+        width: 100%;
+        font-size: 0.55em;
+      }
+      .reveal pre code {
+        max-height: 500px;
+        padding: 15px;
+      }
+      .reveal ul {
+        display: block;
+      }
+      .reveal li {
+        margin-bottom: 0.5em;
+      }
+      .two-column {
+        display: flex;
+        gap: 2em;
+      }
+      .two-column > * {
+        flex: 1;
+      }
+      .highlight-box {
+        background: rgba(0, 102, 204, 0.1);
+        border-left: 4px solid #0066cc;
+        padding: 0.5em 1em;
+        margin: 0.5em 0;
+      }
+      .emoji-list li {
+        list-style: none;
+        margin-left: -1em;
+      }
+      .small-code pre {
+        font-size: 0.45em;
+      }
+      .file-path {
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.08);
+        padding: 0.1em 0.4em;
+        border-radius: 4px;
+        font-size: 0.8em;
+      }
+      .pro-tip {
+        background: rgba(40, 167, 69, 0.1);
+        border-left: 4px solid #28a745;
+        padding: 0.5em 1em;
+        margin: 1em 0;
+        font-size: 0.9em;
+      }
+      .warning {
+        background: rgba(255, 152, 0, 0.1);
+        border-left: 4px solid #ff9800;
+        padding: 0.5em 1em;
+        margin: 1em 0;
+        font-size: 0.9em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- Title Slide -->
+        <section>
+          <h1>Building Text-Based User Interfaces with Textual</h1>
+          <h3>A modern Python framework for rich terminal UIs</h3>
+          <p style="margin-top: 2em;">
+            <strong>Eddie Cosma</strong><br>
+            <small>Python User Group</small>
+          </p>
+        </section>
+
+        <!-- Agenda -->
+        <section>
+          <h2>What We'll Cover</h2>
+          <ul class="emoji-list">
+            <li>Why TUIs? When terminals beat web apps and GUIs</li>
+            <li>Textual Fundamentals: Widgets, layouts, and CSS</li>
+            <li>Async Operations: Non-blocking UI patterns</li>
+            <li>Real-World Integration: SANE scanners + Pillow</li>
+            <li>User Experience: Building intuitive interfaces</li>
+            <li>Practical Patterns: Code you can reuse</li>
+          </ul>
+        </section>
+
+        <!-- The Problem -->
+        <section>
+          <h2>The Problem</h2>
+          <div class="fragment">
+            <p>My scanner came with Windows-only software...</p>
+          </div>
+          <div class="fragment">
+            <p>But SANE provides Linux command-line access:</p>
+            <pre><code class="language-bash">scanimage --device-name="net:raspberrypi:fujitsu:ScanSnap iX500:1290479" \
+    --format=pnm --batch=scan%d.pnm --source "ADF Duplex" \
+    --mode Color --resolution 300 --page-width 216 --page-height 279</code></pre>
+          </div>
+          <div class="fragment">
+            <p>I needed something between CLI complexity and a full GUI...</p>
+          </div>
+        </section>
+
+        <!-- Part 1: Why TUIs? -->
+        <section>
+          <section>
+            <h1>Part 1</h1>
+            <h2>Why TUIs?</h2>
+            <p>When terminal interfaces make sense</p>
+          </section>
+
+          <section>
+            <h2>The Interface Spectrum</h2>
+            <div class="two-column">
+              <div>
+                <h4>CLI</h4>
+                <ul>
+                  <li>Maximum flexibility</li>
+                  <li>Scriptable</li>
+                  <li>Steep learning curve</li>
+                  <li>No discoverability</li>
+                </ul>
+              </div>
+              <div>
+                <h4>GUI</h4>
+                <ul>
+                  <li>Very discoverable</li>
+                  <li>Heavy dependencies</li>
+                  <li>Complex to build</li>
+                  <li>Platform-specific quirks</li>
+                </ul>
+              </div>
+            </div>
+            <div class="fragment highlight-box" style="margin-top: 1em;">
+              <strong>TUI:</strong> The sweet spot for many use cases
+            </div>
+          </section>
+
+          <section>
+            <h2>When TUIs Shine</h2>
+            <ul>
+              <li class="fragment"><strong>System administration tools</strong><br>
+                <small>htop, btop, lazygit, lazydocker</small></li>
+              <li class="fragment"><strong>Developer utilities</strong><br>
+                <small>tig, k9s, ranger, midnight commander</small></li>
+              <li class="fragment"><strong>SSH-accessible applications</strong><br>
+                <small>Remote servers without X forwarding</small></li>
+              <li class="fragment"><strong>Low-resource environments</strong><br>
+                <small>Containers, embedded systems, old hardware</small></li>
+              <li class="fragment"><strong>CLI wrappers with discoverability</strong><br>
+                <small>Make complex tools accessible</small></li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>TUI Advantages</h2>
+            <ul>
+              <li class="fragment"><strong>Pure Python</strong> - No system dependencies like Qt, GTK, Tk</li>
+              <li class="fragment"><strong>Cross-platform</strong> - Works everywhere Python runs</li>
+              <li class="fragment"><strong>Lightweight</strong> - Fast startup, minimal resources</li>
+              <li class="fragment"><strong>Keyboard-first</strong> - Power users love it</li>
+              <li class="fragment"><strong>SSH-friendly</strong> - Works over remote connections</li>
+              <li class="fragment"><strong>Modern aesthetics</strong> - Rich text, colors, styling</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Python TUI Options</h2>
+            <table style="font-size: 0.7em;">
+              <tr>
+                <th>Library</th>
+                <th>Style</th>
+                <th>Best For</th>
+              </tr>
+              <tr>
+                <td>curses</td>
+                <td>Low-level</td>
+                <td>Maximum control</td>
+              </tr>
+              <tr>
+                <td>urwid</td>
+                <td>Widget-based</td>
+                <td>Complex layouts</td>
+              </tr>
+              <tr>
+                <td>prompt_toolkit</td>
+                <td>Input-focused</td>
+                <td>REPL interfaces</td>
+              </tr>
+              <tr>
+                <td>rich</td>
+                <td>Output-focused</td>
+                <td>Beautiful printing</td>
+              </tr>
+              <tr class="fragment highlight" style="background: rgba(0, 102, 204, 0.15);">
+                <td><strong>Textual</strong></td>
+                <td>Modern reactive</td>
+                <td>Full applications</td>
+              </tr>
+            </table>
+          </section>
+
+          <section>
+            <h2>Why Textual?</h2>
+            <ul>
+              <li class="fragment"><strong>Built on Rich</strong> - Beautiful rendering out of the box</li>
+              <li class="fragment"><strong>CSS styling</strong> - Familiar, powerful layout system</li>
+              <li class="fragment"><strong>Async-first</strong> - Native asyncio integration</li>
+              <li class="fragment"><strong>React-like</strong> - Reactive, component-based architecture</li>
+              <li class="fragment"><strong>Batteries included</strong> - Widgets, layouts, themes</li>
+              <li class="fragment"><strong>Excellent docs</strong> - <a href="https://textual.textualize.io">textual.textualize.io</a></li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- Part 2: Textual Fundamentals -->
+        <section>
+          <section>
+            <h1>Part 2</h1>
+            <h2>Textual Fundamentals</h2>
+            <p>Building reactive interfaces</p>
+          </section>
+
+          <section>
+            <h2>Installation</h2>
+            <pre><code class="language-bash"># Using pip
+pip install textual
+
+# Using uv (recommended)
+uv add textual
+
+# For development with devtools
+pip install textual-dev</code></pre>
+            <div class="pro-tip fragment">
+              <strong>Pro tip:</strong> Use <code>textual run --dev myapp.py</code> for hot reloading!
+            </div>
+          </section>
+
+          <section>
+            <h2>Minimal App</h2>
+            <pre><code class="language-python">from textual.app import App, ComposeResult
+from textual.widgets import Static
+
+class HelloWorld(App):
+    def compose(self) -> ComposeResult:
+        yield Static("Hello, World!")
+
+if __name__ == "__main__":
+    app = HelloWorld()
+    app.run()</code></pre>
+            <div class="fragment">
+              <p>Run it:</p>
+              <pre><code class="language-bash">python hello.py</code></pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>The App Class</h2>
+            <pre><code class="language-python">from textual.app import App, ComposeResult
+from textual.widgets import Header, Footer, Log, Input, Select
+from textual.containers import Container, Horizontal
+
+class QuickScan(App[None]):
+    """A Textual app for quick document scanning"""
+
+    CSS_PATH = "quickscan.tcss"  # External stylesheet
+
+    def __init__(self, scan_directory: Path = Path.cwd(), **kwargs):
+        super().__init__(**kwargs)
+        self.scan_directory = scan_directory
+        self.selected_scanner: str = "..."</code></pre>
+            <ul class="fragment" style="font-size: 0.8em;">
+              <li><code>App[None]</code> - Type hint for return value</li>
+              <li><code>CSS_PATH</code> - Links external stylesheet</li>
+              <li><code>__init__</code> - Initialize app state</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Composition Pattern</h2>
+            <pre><code class="language-python">def compose(self) -> ComposeResult:
+    yield Header()
+
+    yield Horizontal(
+        Container(
+            Label("Scanner:", classes="section-header"),
+            Select(options=[...], id="scanner-select"),
+            Label("Scan directory:", classes="section-header"),
+            Input(value=str(self.scan_directory), id="scan-directory"),
+            PresetSelector(PRESETS),
+            id="selector",
+        ),
+        Container(
+            Label("Log", classes="section-header"),
+            Container(Log(auto_scroll=True)),
+            id="scan-log",
+        ),
+    )
+
+    yield Footer()</code></pre>
+          </section>
+
+          <section>
+            <h2>Layout Visualization</h2>
+            <pre style="font-size: 0.5em; background: #f5f5f5; padding: 1em;">
+┌──────────────────────────────────────────────────────────────┐
+│  Header                                                      │
+├──────────────────────────────────────────────────────────────┤
+│  Horizontal                                                  │
+│  ┌─────────────────────────┐  ┌────────────────────────────┐ │
+│  │  Container #selector    │  │  Container #scan-log       │ │
+│  │                         │  │                            │ │
+│  │  ┌─────────────────┐    │  │  ┌──────────────────────┐  │ │
+│  │  │ Label: Scanner  │    │  │  │ Label: Log           │  │ │
+│  │  └─────────────────┘    │  │  └──────────────────────┘  │ │
+│  │  ┌─────────────────┐    │  │  ┌──────────────────────┐  │ │
+│  │  │ Select          │    │  │  │                      │  │ │
+│  │  └─────────────────┘    │  │  │   Log Widget         │  │ │
+│  │  ┌─────────────────┐    │  │  │                      │  │ │
+│  │  │ Label: Dir      │    │  │  │   (auto_scroll)      │  │ │
+│  │  └─────────────────┘    │  │  │                      │  │ │
+│  │  ┌─────────────────┐    │  │  └──────────────────────┘  │ │
+│  │  │ Input           │    │  │                            │ │
+│  │  └─────────────────┘    │  │                            │ │
+│  │  ┌─────────────────┐    │  │                            │ │
+│  │  │ PresetSelector  │    │  │                            │ │
+│  │  │ (ListView)      │    │  │                            │ │
+│  │  └─────────────────┘    │  │                            │ │
+│  └─────────────────────────┘  └────────────────────────────┘ │
+├──────────────────────────────────────────────────────────────┤
+│  Footer                                                      │
+└──────────────────────────────────────────────────────────────┘
+            </pre>
+          </section>
+
+          <section>
+            <h2>Built-in Widgets</h2>
+            <div class="two-column" style="font-size: 0.8em;">
+              <div>
+                <h4>Display</h4>
+                <ul>
+                  <li>Static, Label</li>
+                  <li>DataTable</li>
+                  <li>Tree</li>
+                  <li>Markdown</li>
+                  <li>Log</li>
+                  <li>LoadingIndicator</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Input</h4>
+                <ul>
+                  <li>Button</li>
+                  <li>Input, TextArea</li>
+                  <li>Select, SelectionList</li>
+                  <li>Checkbox, Switch</li>
+                  <li>RadioSet</li>
+                  <li>ListView</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Custom Widgets</h2>
+            <pre><code class="language-python">class PresetSelector(ListView):
+    """Custom ListView that emits preset selection messages"""
+
+    class PresetSelected(Message):
+        """Posted when a preset is selected"""
+        def __init__(self, preset: ScanPreset) -> None:
+            self.preset = preset
+            super().__init__()
+
+    def __init__(self, presets):
+        super().__init__(*[ListItem(Label(p.label)) for p in presets])
+        self.presets = presets
+
+    def on_list_view_selected(self, event):
+        idx = event.index
+        preset = self.presets[idx]
+        self.post_message(self.PresetSelected(preset))</code></pre>
+          </section>
+
+          <section>
+            <h2>CSS Styling</h2>
+            <p class="file-path">quickscan.tcss</p>
+            <pre><code class="language-css">/* Container layouts */
+#selector {
+    padding: 1;
+    width: 60;
+}
+
+#scan-log {
+    padding: 1;
+}
+
+/* Typography */
+.section-header {
+    text-style: bold;
+    margin-top: 1;
+    margin-bottom: 0;
+}
+
+.section-header.first {
+    margin-top: 0;
+}</code></pre>
+          </section>
+
+          <section>
+            <h2>CSS - Widget Styling</h2>
+            <pre><code class="language-css">/* Widget-specific styles */
+Input {
+    margin-bottom: 1;
+}
+
+Select {
+    margin-bottom: 1;
+}
+
+/* Custom widget sizing */
+PresetSelector {
+    height: auto;
+    margin-top: 0;
+}
+
+/* Full-height widgets */
+Log {
+    height: 100%;
+}
+
+Container {
+    height: 100%;
+}</code></pre>
+          </section>
+
+          <section>
+            <h2>CSS Features</h2>
+            <ul>
+              <li class="fragment"><strong>Familiar syntax</strong> - If you know CSS, you know TCSS</li>
+              <li class="fragment"><strong>ID selectors</strong> - <code>#scanner-select</code></li>
+              <li class="fragment"><strong>Class selectors</strong> - <code>.section-header</code></li>
+              <li class="fragment"><strong>Type selectors</strong> - <code>Input</code>, <code>Select</code></li>
+              <li class="fragment"><strong>Pseudo-classes</strong> - <code>:hover</code>, <code>:focus</code></li>
+              <li class="fragment"><strong>Units</strong> - <code>1</code> (cells), <code>50%</code>, <code>auto</code></li>
+            </ul>
+            <div class="pro-tip fragment">
+              <strong>Devtools:</strong> <code>textual run --dev app.py</code> opens CSS inspector with F12
+            </div>
+          </section>
+
+          <section>
+            <h2>Loading Indicators</h2>
+            <pre><code class="language-python"># In compose():
+Horizontal(
+    Select(options=[default_scanner], id="scanner-select"),
+    LoadingIndicator(id="scanner-load-bar"),
+    id="scan-select-container",
+)</code></pre>
+            <pre><code class="language-css">/* In CSS: */
+#scanner-load-bar {
+    height: auto;
+    padding: 1 0;
+    margin: 0;
+    width: auto;
+}</code></pre>
+            <pre><code class="language-python"># Hide when done:
+scanner_load_bar = self.query_one("#scanner-load-bar", LoadingIndicator)
+scanner_load_bar.display = False</code></pre>
+          </section>
+        </section>
+
+        <!-- Part 3: Async Operations -->
+        <section>
+          <section>
+            <h1>Part 3</h1>
+            <h2>Async Operations</h2>
+            <p>Keeping the UI responsive</p>
+          </section>
+
+          <section>
+            <h2>The Challenge</h2>
+            <div class="warning">
+              <strong>Problem:</strong> Scanner detection takes ~20 seconds
+            </div>
+            <div class="fragment">
+              <p>We can't block the UI! Users need to:</p>
+              <ul>
+                <li>See that something is happening</li>
+                <li>Possibly cancel the operation</li>
+                <li>Use other parts of the interface</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>Async Subprocess</h2>
+            <pre><code class="language-python">async def get_available_scanners() -> list[tuple[str, str]]:
+    """Get list of available scanners from scanimage command."""
+    import asyncio
+
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "scanimage",
+            "-f", "%d%n",  # Format: device names only
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(
+            process.communicate(),
+            timeout=20  # Don't wait forever!
+        )
+        # ... process results
+    except asyncio.TimeoutError:
+        return [("Timeout detecting scanners", "")]
+    except Exception as e:
+        return [(f"Error: {str(e)}", "")]</code></pre>
+          </section>
+
+          <section>
+            <h2>Textual Workers</h2>
+            <pre><code class="language-python">def on_mount(self):
+    """Called when the app is mounted. Start async scanner detection."""
+    self.run_worker(self.load_scanners(), exclusive=False)
+
+async def load_scanners(self):
+    """Load available scanners and update the Select widget."""
+    scanners = await get_available_scanners()
+
+    # Update UI with results
+    scanner_select = self.query_one("#scanner-select", Select)
+    scanner_select.set_options(scanners)
+
+    # Hide loading indicator
+    scanner_load_bar = self.query_one("#scanner-load-bar", LoadingIndicator)
+    scanner_load_bar.display = False</code></pre>
+          </section>
+
+          <section>
+            <h2>Worker Options</h2>
+            <pre><code class="language-python"># Non-exclusive: run alongside other workers
+self.run_worker(self.load_scanners(), exclusive=False)
+
+# Exclusive: cancel other workers first
+self.run_worker(run_scan(), exclusive=True)</code></pre>
+            <div class="fragment">
+              <h4>Use Cases:</h4>
+              <ul style="font-size: 0.8em;">
+                <li><code>exclusive=False</code> - Background tasks (detection, refresh)</li>
+                <li><code>exclusive=True</code> - User-initiated actions (scan, save)</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>Real-Time Scan Output</h2>
+            <pre><code class="language-python">scan_process = await asyncio.create_subprocess_shell(
+    cmd=cmd,
+    stderr=asyncio.subprocess.STDOUT,  # Merge streams
+    stdout=asyncio.subprocess.PIPE,
+)
+
+output = b""
+if scan_process.stdout:
+    while True:
+        line = await scan_process.stdout.readline()
+        if not line:
+            break
+        output += line
+        if log_callback:
+            log_callback(line.decode(errors="ignore"))
+
+await scan_process.wait()</code></pre>
+          </section>
+
+          <section>
+            <h2>Thread-Safe Logging</h2>
+            <pre><code class="language-python">def on_preset_selector_preset_selected(self, message):
+    preset = message.preset
+    scanner = Scanner(
+        scanner_name=self.selected_scanner,
+        scan_directory=Path(self.scan_directory),
+    )
+    log_widget = self.query_one(Log)
+
+    def log_callback(line: str):
+        # call_later ensures thread-safe widget update
+        self.call_later(log_widget.write, line)
+
+    async def run_scan():
+        await scanner.scan(
+            mode=preset.mode,
+            source=preset.source,
+            # ... other params
+            log_callback=log_callback,
+        )
+
+    self.run_worker(run_scan(), exclusive=True)</code></pre>
+          </section>
+
+          <section>
+            <h2>Why call_later()?</h2>
+            <div class="warning">
+              <strong>Important:</strong> Textual widgets are NOT thread-safe!
+            </div>
+            <div class="fragment">
+              <pre><code class="language-python"># WRONG - May cause race conditions
+def log_callback(line: str):
+    log_widget.write(line)  # Direct call from async context
+
+# CORRECT - Schedules in main event loop
+def log_callback(line: str):
+    self.call_later(log_widget.write, line)</code></pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>Event Handling Pattern</h2>
+            <pre><code class="language-python"># Input change events
+def on_input_changed(self, event: Input.Changed):
+    if event.input.id == "scan-directory":
+        self.scan_directory = event.value
+
+# Select change events
+def on_select_changed(self, event: Select.Changed):
+    if event.select.id == "scanner-select":
+        self.selected_scanner = str(event.value)
+
+# Custom message events
+def on_preset_selector_preset_selected(
+    self, message: PresetSelector.PresetSelected
+):
+    preset = message.preset
+    # ... handle preset selection</code></pre>
+          </section>
+
+          <section>
+            <h2>Event Naming Convention</h2>
+            <pre><code class="language-python"># Widget class: PresetSelector
+# Message class: PresetSelected
+# Handler method: on_preset_selector_preset_selected
+
+# Pattern: on_{widget_class}_{message_class}
+# (converted to snake_case)</code></pre>
+            <div class="fragment highlight-box">
+              Textual automatically routes messages to handlers based on naming!
+            </div>
+          </section>
+        </section>
+
+        <!-- Part 4: Real-World Integration -->
+        <section>
+          <section>
+            <h1>Part 4</h1>
+            <h2>Real-World Integration</h2>
+            <p>SANE scanners and image processing</p>
+          </section>
+
+          <section>
+            <h2>SANE Overview</h2>
+            <ul>
+              <li><strong>S</strong>canner <strong>A</strong>ccess <strong>N</strong>ow <strong>E</strong>asy</li>
+              <li>Standard Linux scanner interface</li>
+              <li>Network scanner support</li>
+              <li><code>scanimage</code> CLI tool</li>
+            </ul>
+            <pre class="fragment"><code class="language-bash"># List available scanners
+scanimage -L
+
+# Device format:
+# net:raspberrypi:fujitsu:ScanSnap iX500:1290479</code></pre>
+          </section>
+
+          <section>
+            <h2>Configuration Classes</h2>
+            <pre><code class="language-python">from enum import StrEnum
+
+class ScanMode(StrEnum):
+    LINEART = "Lineart"
+    GRAY = "Gray"
+    COLOR = "Color"
+
+class DocumentFeederSource(StrEnum):
+    FRONT = "ADF Front"
+    BACK = "ADF Back"
+    DUPLEX = "ADF Duplex"</code></pre>
+            <div class="fragment">
+              <p><small>StrEnum (Python 3.11+) makes these usable directly in CLI commands</small></p>
+            </div>
+          </section>
+
+          <section>
+            <h2>Scan Presets</h2>
+            <pre><code class="language-python">class ScanPreset:
+    def __init__(
+        self,
+        label: str,
+        mode: ScanMode,
+        source: DocumentFeederSource,
+        resolution: int,
+        page_width: int,
+        page_height: int,
+    ):
+        self.label = label
+        self.mode = mode
+        self.source = source
+        self.resolution = resolution
+        self.page_width = page_width
+        self.page_height = page_height</code></pre>
+          </section>
+
+          <section>
+            <h2>Preset Examples</h2>
+            <pre><code class="language-python">PRESETS = [
+    ScanPreset(
+        "Black & White Document (Simplex)",
+        ScanMode.LINEART,
+        DocumentFeederSource.FRONT,
+        300,   # DPI
+        216,   # Width in mm
+        279,   # Height in mm
+    ),
+    ScanPreset(
+        "Color Document (Duplex)",
+        ScanMode.COLOR,
+        DocumentFeederSource.DUPLEX,
+        300, 216, 279,
+    ),
+    ScanPreset(
+        "Business Cards",
+        ScanMode.COLOR,
+        DocumentFeederSource.DUPLEX,
+        300, 89, 51,  # Business card dimensions
+    ),
+]</code></pre>
+          </section>
+
+          <section>
+            <h2>Building the Scan Command</h2>
+            <pre><code class="language-python">cmd = subprocess.list2cmdline([
+    "scanimage",
+    f"--device-name={self.name}",
+    "--format=pnm",                    # Portable PixMap format
+    f"--batch={temp_path}/scan%d.pnm", # Numbered output files
+    "--source", source.value,          # ADF Front/Back/Duplex
+    "--mode", mode.value,              # Lineart/Gray/Color
+    "--resolution", str(resolution),   # DPI
+    "--page-width", str(page_width),   # mm
+    "--page-height", str(page_height), # mm
+])</code></pre>
+          </section>
+
+          <section>
+            <h2>Temporary File Management</h2>
+            <pre><code class="language-python">from tempfile import TemporaryDirectory
+
+async def scan(self, ...):
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # scanimage writes to temp_path/scan1.pnm, scan2.pnm, etc.
+        scan_process = await asyncio.create_subprocess_shell(
+            cmd=cmd,
+            stderr=asyncio.subprocess.STDOUT,
+            stdout=asyncio.subprocess.PIPE,
+        )
+        # ... process output ...
+        await scan_process.wait()
+
+        # Find all scanned pages
+        pnm_files = sorted(temp_path.glob("scan*.pnm"))
+
+    # temp_dir automatically cleaned up here!</code></pre>
+          </section>
+
+          <section>
+            <h2>Image Processing with Pillow</h2>
+            <pre><code class="language-python">from PIL import Image
+
+# Open all scanned images
+images = []
+for pnm_file in pnm_files:
+    img = Image.open(pnm_file)
+    # PDF requires RGB mode
+    if img.mode != "RGB":
+        img = img.convert("RGB")
+    images.append(img)</code></pre>
+            <div class="fragment">
+              <p><strong>Why convert?</strong></p>
+              <ul style="font-size: 0.8em;">
+                <li>Lineart mode produces 1-bit images</li>
+                <li>Gray mode produces 8-bit grayscale</li>
+                <li>PDF encoding requires RGB</li>
+              </ul>
+            </div>
+          </section>
+
+          <section>
+            <h2>PDF Generation</h2>
+            <pre><code class="language-python">from datetime import datetime
+
+# Generate unique filename
+timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+pdf_path = self.scan_directory / f"scan_{timestamp}.pdf"
+
+# Save as multi-page PDF
+if len(images) == 1:
+    images[0].save(pdf_path, "PDF")
+else:
+    images[0].save(
+        pdf_path,
+        "PDF",
+        save_all=True,
+        append_images=images[1:]
+    )
+
+# Clean up
+for img in images:
+    img.close()</code></pre>
+          </section>
+
+          <section>
+            <h2>Why PNM Format?</h2>
+            <ul>
+              <li class="fragment"><strong>Lossless</strong> - No compression artifacts</li>
+              <li class="fragment"><strong>Simple</strong> - Easy to parse, debug</li>
+              <li class="fragment"><strong>Universal</strong> - Pillow reads it directly</li>
+              <li class="fragment"><strong>Batch-friendly</strong> - scanimage supports it well</li>
+            </ul>
+            <div class="fragment pro-tip">
+              <strong>Tip:</strong> Use PNM/PPM for intermediate files, convert to final format at the end
+            </div>
+          </section>
+        </section>
+
+        <!-- Part 5: User Experience -->
+        <section>
+          <section>
+            <h1>Part 5</h1>
+            <h2>User Experience</h2>
+            <p>Building intuitive interfaces</p>
+          </section>
+
+          <section>
+            <h2>Dropdowns with Select</h2>
+            <pre><code class="language-python"># Create with initial options
+default_scanner = (self.selected_scanner, self.selected_scanner)
+Select(
+    options=[default_scanner],
+    id="scanner-select",
+    allow_blank=False,
+)
+
+# Update options dynamically
+scanner_select = self.query_one("#scanner-select", Select)
+scanner_select.set_options([
+    ("Scanner 1", "device:scanner1"),
+    ("Scanner 2", "device:scanner2"),
+])</code></pre>
+          </section>
+
+          <section>
+            <h2>Real-Time Logging</h2>
+            <pre><code class="language-python"># In compose()
+Container(
+    Label("Log", classes="section-header first"),
+    Container(Log(auto_scroll=True)),  # Nested for styling
+    id="scan-log",
+)
+
+# During operation
+log_widget = self.query_one(Log)
+
+def log_callback(line: str):
+    self.call_later(log_widget.write, line)
+
+# Log widget auto-scrolls to show newest output!</code></pre>
+          </section>
+
+          <section>
+            <h2>Visual Feedback</h2>
+            <div class="two-column">
+              <div>
+                <h4>Loading States</h4>
+                <pre><code class="language-python"># Show loading
+indicator.display = True
+
+# Hide when done
+indicator.display = False</code></pre>
+              </div>
+              <div>
+                <h4>Status Messages</h4>
+                <pre><code class="language-python"># In log callback
+log_callback("Scanning...")
+log_callback("Processing...")
+log_callback(f"Saved to {path}")</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Header and Footer</h2>
+            <pre><code class="language-python">def compose(self) -> ComposeResult:
+    yield Header()  # Shows app title
+    # ... content ...
+    yield Footer()  # Shows key bindings</code></pre>
+            <div class="fragment">
+              <pre><code class="language-python"># Add custom bindings
+BINDINGS = [
+    ("q", "quit", "Quit"),
+    ("r", "refresh", "Refresh"),
+    ("ctrl+s", "scan", "Scan"),
+]</code></pre>
+            </div>
+          </section>
+
+          <section>
+            <h2>Query Selectors</h2>
+            <pre><code class="language-python"># Query by ID
+scanner_select = self.query_one("#scanner-select", Select)
+
+# Query by type
+log_widget = self.query_one(Log)
+
+# Query multiple
+all_inputs = self.query(Input)
+
+# Query with CSS selector
+buttons = self.query("Button.primary")</code></pre>
+            <div class="fragment highlight-box">
+              Second parameter is the expected type - provides type hints!
+            </div>
+          </section>
+
+          <section>
+            <h2>Input Handling</h2>
+            <pre><code class="language-python">Input(
+    value=str(self.scan_directory),    # Initial value
+    placeholder=str(Path.cwd),          # Placeholder text
+    id="scan-directory",                # For querying
+)
+
+def on_input_changed(self, event: Input.Changed):
+    # React to every keystroke
+    if event.input.id == "scan-directory":
+        self.scan_directory = event.value
+
+def on_input_submitted(self, event: Input.Submitted):
+    # React to Enter key
+    pass</code></pre>
+          </section>
+        </section>
+
+        <!-- Part 6: Practical Patterns -->
+        <section>
+          <section>
+            <h1>Part 6</h1>
+            <h2>Practical Patterns</h2>
+            <p>Reusable code for your projects</p>
+          </section>
+
+          <section>
+            <h2>Pattern: Device Detection</h2>
+            <pre><code class="language-python">async def get_available_devices() -> list[tuple[str, str]]:
+    try:
+        process = await asyncio.create_subprocess_exec(
+            "some-command", "--list",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, _ = await asyncio.wait_for(
+            process.communicate(),
+            timeout=20
+        )
+        if process.returncode == 0:
+            devices = parse_output(stdout.decode())
+            return devices if devices else [("No devices found", "")]
+        return [("Error detecting devices", "")]
+    except asyncio.TimeoutError:
+        return [("Timeout detecting devices", "")]
+    except Exception as e:
+        return [(f"Error: {str(e)}", "")]</code></pre>
+          </section>
+
+          <section>
+            <h2>Pattern: Background Loading</h2>
+            <pre><code class="language-python">class MyApp(App):
+    def on_mount(self):
+        # Start background tasks when app loads
+        self.run_worker(self.load_data(), exclusive=False)
+
+    async def load_data(self):
+        # Show loading state
+        self.query_one("#loading").display = True
+
+        # Do async work
+        data = await fetch_data()
+
+        # Update UI
+        self.query_one("#data-view").update(data)
+
+        # Hide loading state
+        self.query_one("#loading").display = False</code></pre>
+          </section>
+
+          <section>
+            <h2>Pattern: Custom Messages</h2>
+            <pre><code class="language-python">from textual.message import Message
+
+class MyWidget(Widget):
+    class ItemSelected(Message):
+        def __init__(self, item: Item) -> None:
+            self.item = item
+            super().__init__()
+
+    def select_item(self, item):
+        # Post message - bubbles up to parent/app
+        self.post_message(self.ItemSelected(item))
+
+class MyApp(App):
+    def on_my_widget_item_selected(self, message):
+        # Handle the message
+        item = message.item
+        self.do_something_with(item)</code></pre>
+          </section>
+
+          <section>
+            <h2>Pattern: Thread-Safe Updates</h2>
+            <pre><code class="language-python">class MyApp(App):
+    def run_background_task(self):
+        progress = self.query_one(ProgressBar)
+        log = self.query_one(Log)
+
+        def update_progress(value: int):
+            self.call_later(progress.update, value)
+
+        def log_message(msg: str):
+            self.call_later(log.write, msg)
+
+        async def task():
+            for i in range(100):
+                await asyncio.sleep(0.1)
+                update_progress(i)
+                log_message(f"Step {i}\n")
+
+        self.run_worker(task())</code></pre>
+          </section>
+
+          <section>
+            <h2>Pattern: Temp File Workflow</h2>
+            <pre><code class="language-python">from tempfile import TemporaryDirectory
+from pathlib import Path
+
+async def process_files():
+    with TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Write intermediate files
+        for i, data in enumerate(items):
+            (temp_path / f"item{i}.tmp").write_bytes(data)
+
+        # Process all files
+        results = []
+        for f in sorted(temp_path.glob("*.tmp")):
+            results.append(process(f))
+
+        # Write final output
+        output_path = Path.cwd() / "output.pdf"
+        save_results(results, output_path)
+
+    # temp_dir is automatically deleted here!</code></pre>
+          </section>
+
+          <section>
+            <h2>Pattern: Graceful Error Handling</h2>
+            <pre><code class="language-python">async def safe_operation():
+    log = self.query_one(Log)
+
+    try:
+        result = await risky_operation()
+        log.write(f"Success: {result}\n")
+    except TimeoutError:
+        log.write("Operation timed out. Please try again.\n")
+    except PermissionError:
+        log.write("Permission denied. Check your access.\n")
+    except Exception as e:
+        log.write(f"Unexpected error: {e}\n")
+        # Log full traceback for debugging
+        import traceback
+        log.write(traceback.format_exc())</code></pre>
+          </section>
+
+          <section>
+            <h2>Project Structure</h2>
+            <pre style="font-size: 0.55em;"><code class="language-text">my-tui-app/
+├── src/
+│   └── myapp/
+│       ├── __init__.py
+│       ├── __main__.py      # Entry point
+│       ├── app.py           # Main Textual app
+│       ├── app.tcss         # Styles
+│       ├── widgets/         # Custom widgets
+│       │   ├── __init__.py
+│       │   └── selector.py
+│       └── backend/         # Business logic
+│           ├── __init__.py
+│           └── operations.py
+├── tests/
+├── pyproject.toml
+└── README.md</code></pre>
+          </section>
+
+          <section>
+            <h2>pyproject.toml Setup</h2>
+            <pre><code class="language-toml">[project]
+name = "myapp"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "textual>=6.3.0",
+    "pillow>=12.1.0",
+]
+
+[project.scripts]
+myapp = "myapp.__main__:main"
+
+# Include CSS files in package
+[tool.hatch.build.targets.wheel]
+packages = ["src/myapp"]
+
+[tool.hatch.build.targets.wheel.sources]
+"src" = ""</code></pre>
+          </section>
+        </section>
+
+        <!-- Demo -->
+        <section>
+          <section>
+            <h1>Demo Time!</h1>
+            <pre><code class="language-bash"># Clone the repo
+git clone https://github.com/yourusername/quick-scan
+
+# Install with uv
+cd quick-scan
+uv sync
+
+# Run
+uv run quickscan</code></pre>
+          </section>
+
+          <section>
+            <h2>What to Watch For</h2>
+            <ul>
+              <li>Scanner detection with loading indicator</li>
+              <li>Real-time log output during scanning</li>
+              <li>PDF generation from scanned pages</li>
+              <li>Responsive UI throughout</li>
+            </ul>
+          </section>
+        </section>
+
+        <!-- Tips & Best Practices -->
+        <section>
+          <section>
+            <h2>Tips & Best Practices</h2>
+          </section>
+
+          <section>
+            <h2>Development Workflow</h2>
+            <pre><code class="language-bash"># Install dev tools
+pip install textual-dev
+
+# Run with hot reload
+textual run --dev myapp.py
+
+# Open devtools (while app is running)
+# Press F12 or use textual console</code></pre>
+          </section>
+
+          <section>
+            <h2>Debugging Tips</h2>
+            <ul>
+              <li class="fragment">Use <code>textual console</code> for live debugging</li>
+              <li class="fragment">Add <code>log.write()</code> calls for tracing</li>
+              <li class="fragment">Check CSS with devtools (F12)</li>
+              <li class="fragment">Use <code>--dev</code> flag for better error messages</li>
+              <li class="fragment">Type hints help catch widget query errors</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Performance Tips</h2>
+            <ul>
+              <li class="fragment">Use workers for I/O operations</li>
+              <li class="fragment"><code>exclusive=True</code> for sequential operations</li>
+              <li class="fragment">Batch widget updates when possible</li>
+              <li class="fragment">Use <code>Log</code> widget for streaming output</li>
+              <li class="fragment">Clean up resources (close files, images)</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Common Pitfalls</h2>
+            <div class="warning">
+              <ul>
+                <li><strong>Blocking the event loop</strong> - Always use async for I/O</li>
+                <li><strong>Direct widget updates from threads</strong> - Use call_later()</li>
+                <li><strong>Missing CSS file</strong> - Check CSS_PATH is correct</li>
+                <li><strong>Widget not found</strong> - Verify ID matches exactly</li>
+              </ul>
+            </div>
+          </section>
+        </section>
+
+        <!-- Resources -->
+        <section>
+          <h2>Resources</h2>
+          <ul>
+            <li><strong>Textual Docs:</strong> <a href="https://textual.textualize.io">textual.textualize.io</a></li>
+            <li><strong>Widget Gallery:</strong> <a href="https://textual.textualize.io/widget_gallery/">textual.textualize.io/widget_gallery</a></li>
+            <li><strong>GitHub:</strong> <a href="https://github.com/Textualize/textual">github.com/Textualize/textual</a></li>
+            <li><strong>Discord:</strong> Textual community</li>
+            <li><strong>This Project:</strong> <a href="https://github.com/yourusername/quick-scan">github.com/.../quick-scan</a></li>
+          </ul>
+        </section>
+
+        <!-- Q&A -->
+        <section>
+          <h1>Questions?</h1>
+          <p style="margin-top: 2em;">
+            <strong>Eddie Cosma</strong><br>
+            <small>github.com/yourusername</small>
+          </p>
+        </section>
+
+        <!-- Thank You -->
+        <section>
+          <h1>Thank You!</h1>
+          <p>Happy TUI building!</p>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        plugins: [ RevealHighlight, RevealNotes ],
+        // Presentation settings for 45-60 minute talk
+        transition: 'slide',
+        transitionSpeed: 'default',
+        // Nested slides - go down with arrow keys
+        navigationMode: 'default',
+      });
+    </script>
+  </body>
+</html>
