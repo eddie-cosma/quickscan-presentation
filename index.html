@@ -75,7 +75,7 @@
 
         <!-- Title Slide -->
         <section>
-          <h1>Building Text-Based User Interfaces with Textual</h1>
+          <h2>Building Text-Based User Interfaces with Textual</h2>
           <h3>A modern Python framework for rich terminal UIs</h3>
           <p style="margin-top: 2em;">
             <strong>Eddie Cosma</strong><br>
@@ -86,31 +86,85 @@
         <!-- Agenda -->
         <section>
           <h2>What We'll Cover</h2>
-          <ul class="emoji-list">
-            <li>Why TUIs? When terminals beat web apps and GUIs</li>
-            <li>Textual Fundamentals: Widgets, layouts, and CSS</li>
-            <li>Async Operations: Non-blocking UI patterns</li>
-            <li>Real-World Integration: SANE scanners + Pillow</li>
-            <li>User Experience: Building intuitive interfaces</li>
-            <li>Practical Patterns: Code you can reuse</li>
+          <ul>
+            <li>Why TUIs?</li>
+            <li>Textual Fundamentals</li>
+            <li>Async Operations</li>
+            <li>Real-World Integration</li>
+            <li>User Experience</li>
+            <li>Practical Patterns</li>
           </ul>
+        
+            <aside class="notes">
+              <ul>
+                <li>Why TUIs? When terminals beat web apps and GUIs</li>
+                <li>Textual Fundamentals: Widgets, layouts, and CSS</li>
+                <li>Async Operations: Non-blocking UI patterns</li>
+                <li>Real-World Integration: SANE scanners + Pillow</li>
+                <li>User Experience: Building intuitive interfaces</li>
+                <li>Practical Patterns: Code you can reuse</li>
+              </ul>
+            </aside>
         </section>
 
         <!-- The Problem -->
         <section>
-          <h2>The Problem</h2>
-          <div class="fragment">
-            <p>My scanner came with Windows-only software...</p>
-          </div>
-          <div class="fragment">
-            <p>But SANE provides Linux command-line access:</p>
-            <pre><code class="language-bash">scanimage --device-name="net:raspberrypi:fujitsu:ScanSnap iX500:1290479" \
-    --format=pnm --batch=scan%d.pnm --source "ADF Duplex" \
-    --mode Color --resolution 300 --page-width 216 --page-height 279</code></pre>
-          </div>
-          <div class="fragment">
-            <p>I needed something between CLI complexity and a full GUI...</p>
-          </div>
+          <section>
+            <h2>My scanner</h2>
+            <p>I have a 10-year-old fujitsu ScanSnap ix500</p>
+            <img src="assets/scanner.jpg" style="width: 50%;">
+          </section>
+
+          <section>
+            <h2>It's a great little scanner</h2>
+            <ul>
+              <li>It has a document feeder</li>
+              <li>It duplexes</li>
+              <li>It handles different media</li>
+              <li>It never jams</li>
+              <li>The scan quality is great</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>But there's a problem</h2>
+            <p>The proprietary software is Windows-only</p>
+            <img src="assets/vm.png">
+
+          <aside class="notes">
+            <p>Running on a Windows VM, connected via WiFi</p>
+          </aside>
+          </section>
+
+          <section>
+            <h2>The Problem</h2>
+            <ul>
+              <li>macOS support ended with Sonoma</li>
+              <li>I don't have any Windows machines anymore</li>
+              <li>I want to use Linux and macOS</li>
+              <li>I want to get rid of my Windows VM</li>
+              <li>I want to scan from any networked computer</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2>Potential solution</h2>
+            <ul>
+            <div class="fragment">
+              <li>SANE provides Linux command-line access...</li>
+              <pre><code class="language-bash">scanimage --device-name="net:raspberrypi:fujitsu:ScanSnap iX500:1290479" \
+      --format=pnm --batch=scan%d.pnm --source "ADF Duplex" \
+      --mode Color --resolution 300 --page-width 216 --page-height 279</code></pre>
+            </div>
+            <div class="fragment">
+              <li>... but it does not support WiFi connection to the scanner</li>
+            </div>
+            <div class="fragment">
+              <li>It's complicated to remember scanner-specific parameters</li>
+            </div>
+            </ul>
+          </section>
+
         </section>
 
         <!-- Part 1: Why TUIs? -->
@@ -151,15 +205,15 @@
           <section>
             <h2>When TUIs Shine</h2>
             <ul>
-              <li class="fragment"><strong>System administration tools</strong><br>
+              <li class="fragment" style="margin-bottom: 0;"><strong>System administration tools</strong><br>
                 <small>htop, btop, lazygit, lazydocker</small></li>
-              <li class="fragment"><strong>Developer utilities</strong><br>
+              <li class="fragment" style="margin-bottom: 0;"><strong>Developer utilities</strong><br>
                 <small>tig, k9s, ranger, midnight commander</small></li>
-              <li class="fragment"><strong>SSH-accessible applications</strong><br>
+              <li class="fragment" style="margin-bottom: 0;"><strong>SSH-accessible applications</strong><br>
                 <small>Remote servers without X forwarding</small></li>
-              <li class="fragment"><strong>Low-resource environments</strong><br>
+              <li class="fragment" style="margin-bottom: 0;"><strong>Low-resource environments</strong><br>
                 <small>Containers, embedded systems, old hardware</small></li>
-              <li class="fragment"><strong>CLI wrappers with discoverability</strong><br>
+              <li class="fragment" style="margin-bottom: 0;"><strong>CLI wrappers with discoverability</strong><br>
                 <small>Make complex tools accessible</small></li>
             </ul>
           </section>
