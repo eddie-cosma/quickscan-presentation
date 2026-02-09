@@ -694,6 +694,10 @@ def log_callback(line: str):
 def log_callback(line: str):
     self.call_later(log_widget.write, line)</code></pre>
             </div>
+
+            <aside class="notes">
+              <p>self.call_later schedules log_widget.write to run on Textual's main event loop thread rather than calling it immediately. This matters because the log_callback function gets invoked from inside an async worker (the run_scan coroutine launched via self.run_worker). Workers run concurrently, and Textual's widgets aren't thread-safe — updating a widget's state directly from outside the main event loop can cause race conditions or rendering glitches. call_later queues the write operation so that Textual processes it safely during its next event loop iteration, ensuring the Log widget updates correctly.</p>
+            </aside>
           </section>
 
           <section>
@@ -1009,9 +1013,6 @@ all_inputs = self.query(Input)
 
 # Query with CSS selector
 buttons = self.query("Button.primary")</code></pre>
-            <div class="fragment highlight-box">
-              Second parameter is the expected type - provides type hints!
-            </div>
           </section>
 
           <section>
