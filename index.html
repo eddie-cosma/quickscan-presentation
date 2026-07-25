@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Building Text-Based User Interfaces with Textual</title>
+    <title>Textual Healing: Building Real-World Terminal UIs with Python</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reset.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/reveal.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/5.1.0/theme/white.min.css">
@@ -75,11 +75,11 @@
 
         <!-- Title Slide -->
         <section>
-          <h2>Building Text-Based User Interfaces with Textual</h2>
-          <h3>A modern Python framework for rich terminal UIs</h3>
+          <h2>Textual Healing</h2>
+          <h3>Building Real-World Terminal UIs with Python</h3>
           <p style="margin-top: 2em;">
             <strong>Eddie Cosma</strong><br>
-            <small>Python User Group</small>
+            <small>PyOhio<br>July 25, 2026</small>
           </p>
         </section>
 
@@ -87,11 +87,10 @@
         <section>
           <h2>What We'll Cover</h2>
           <ul>
-            <li>Why TUIs?</li>
-            <li>Textual Fundamentals</li>
-            <li>Async Operations</li>
-            <li>Real-World Integration</li>
-            <li>User Experience</li>
+            <li>What are TUIs</li>
+            <li>Basics of Textual</li>
+            <li>Building an application</li>
+            <li>Demo</li>
           </ul>
         
             <aside class="notes">
@@ -138,9 +137,9 @@
           <section>
             <h2>The Problem</h2>
             <ul>
-              <li>macOS support ended with Sonoma</li>
+              <li>macOS support ended with macOS 14 (Sonoma)</li>
               <li>I don't have any Windows machines anymore</li>
-              <li>I want to use Linux and macOS</li>
+              <li>I want to use Linux <span style="text-decoration: line-through">and macOS</span></li>
               <li>I want to get rid of my Windows VM</li>
               <li>I want to scan from any networked computer</li>
             </ul>
@@ -192,7 +191,7 @@
                   <li>Very discoverable</li>
                   <li>Heavy dependencies</li>
                   <li>Complex to build</li>
-                  <li>Platform-specific quirks</li>
+                  <li>Platform-specific</li>
                 </ul>
               </div>
             </div>
@@ -202,11 +201,22 @@
           </section>
 
           <section>
-            <h2>Example: spotify-tui</h2>
+            <h2>Example: spotatui</h2>
             <img src="assets/spotify-tui.gif">
-            <small><a href="https://github.com/Rigellute/spotify-tui">https://github.com/Rigellute/spotify-tui</a></small>
+            <small><a href="https://github.com/LargeModGames/spotatui">https://github.com/LargeModGames/spotatui</a></small>
+          </section>
+          
+          <section>
+            <h2>Other examples</h2>
+            <ul>
+              <li class="fragment">System tools like htop, btop</li>
+              <li class="fragment">Developer utilities like lazygit, lazydocker</li>
+              <li class="fragment">Text editors like vi</li>
+              <li class="fragment">BIOS</li>
+            </ul>
           </section>
 
+          <!--
           <section>
             <h2>When TUIs Shine</h2>
             <ul>
@@ -222,15 +232,15 @@
                 <small>Make complex tools accessible</small></li>
             </ul>
           </section>
+          s-->
 
           <section>
             <h2>TUI Advantages</h2>
             <ul>
-              <li class="fragment"><strong>Pure Python</strong> - No system dependencies like Qt, GTK, Tk</li>
+              <li class="fragment"><strong>Pure Python</strong> - No system dependencies (e.g., Qt, GTK, Tk)</li>
               <li class="fragment"><strong>Cross-platform</strong> - Works everywhere Python runs</li>
-              <li class="fragment"><strong>Lightweight</strong> - Fast startup, minimal resources</li>
-              <li class="fragment"><strong>Keyboard-first</strong> - Power users love it</li>
-              <li class="fragment"><strong>SSH-friendly</strong> - Works over remote connections</li>
+              <li class="fragment"><strong>Lightweight</strong> and <strong>Keyboard-first</strong></li>
+              <li class="fragment"><strong>SSH-friendly</strong> - Remote use without remote desktop</li>
               <li class="fragment"><strong>Modern aesthetics</strong> - Rich text, colors, styling</li>
             </ul>
           </section>
@@ -291,12 +301,11 @@
           </section>
         </section>
 
-        <!-- Part 2: Textual Fundamentals -->
+        <!-- Part 2: Intro to Textual -->
         <section>
           <section>
             <h1>Part 2</h1>
-            <h2>Textual Fundamentals</h2>
-            <p>Building reactive interfaces</p>
+            <h2>Intro to Textual</h2>
           </section>
 
           <section>
@@ -481,7 +490,7 @@ class QuickScan(App[None]):
 }</code></pre>
           </section>
 
-          <section>
+          <!-- <section>
             <h2>CSS - Widget Styling</h2>
             <pre><code class="language-css">/* Widget-specific styles */
 Input {
@@ -506,7 +515,7 @@ Log {
 Container {
     height: 100%;
 }</code></pre>
-          </section>
+          </section> -->
 
           <section>
             <h2>CSS Features</h2>
@@ -576,7 +585,7 @@ scanner_load_bar.display = False</code></pre>
 
           <section>
             <h2>Async Subprocess</h2>
-            <pre><code class="language-python">async def get_available_scanners() -> list[tuple[str, str]]:
+            <pre><code class="language-python" data-line-numbers="1-3">async def get_available_scanners() -> list[tuple[str, str]]:
     """Get list of available scanners from scanimage command."""
     import asyncio
 
@@ -600,7 +609,7 @@ scanner_load_bar.display = False</code></pre>
 
           <section>
             <h2>Textual Workers</h2>
-            <pre><code class="language-python">def on_mount(self):
+            <pre><code class="language-python" data-line-numbers="5,7|3|9-15">def on_mount(self):
     """Called when the app is mounted. Start async scanner detection."""
     self.run_worker(self.load_scanners(), exclusive=False)
 
@@ -617,7 +626,7 @@ async def load_scanners(self):
     scanner_load_bar.display = False</code></pre>
           </section>
 
-          <section>
+          <!-- <section>
             <h2>Worker Options</h2>
             <pre><code class="language-python"># Non-exclusive: run alongside other workers
 self.run_worker(self.load_scanners(), exclusive=False)
@@ -631,7 +640,7 @@ self.run_worker(run_scan(), exclusive=True)</code></pre>
                 <li><code>exclusive=True</code> - User-initiated actions (scan, save)</li>
               </ul>
             </div>
-          </section>
+          </section>>
 
           <section>
             <h2>Real-Time Scan Output</h2>
@@ -732,13 +741,14 @@ def on_preset_selector_preset_selected(
               Textual automatically routes messages to handlers based on naming!
             </div>
           </section>
+        -->
         </section>
 
         <!-- Part 4: Real-World Integration -->
         <section>
           <section>
             <h1>Part 4</h1>
-            <h2>Real-World Integration</h2>
+            <h2>Integration</h2>
             <p>SANE scanners and image processing</p>
           </section>
 
@@ -746,15 +756,29 @@ def on_preset_selector_preset_selected(
             <h2>SANE Overview</h2>
             <ul>
               <li><strong>S</strong>canner <strong>A</strong>ccess <strong>N</strong>ow <strong>E</strong>asy</li>
-              <li>Standard Linux scanner interface</li>
-              <li>Network scanner support</li>
+              <li>Standard Linux scanner API</li>
+          </section>
+
+          <section>
+            <h2>Network scanner support</h2>
+            <ul>
               <li><code>scanimage</code> CLI tool</li>
             </ul>
-            <pre class="fragment"><code class="language-bash"># List available scanners
+            <pre><code class="language-bash"># List available scanners
 scanimage -L
 
 # Device format:
 # net:raspberrypi:fujitsu:ScanSnap iX500:1290479</code></pre>
+          </section>
+
+          <section>
+            <h2>Input file configuration</h2>
+            <ul>
+              <li>Also the <code>scanimage</code> CLI tool</li>
+            </ul>
+            <pre><code class="language-bash" data-line-numbers="2-3">scanimage --device-name="net:raspberrypi:fujitsu:ScanSnap iX500:1290479" \
+      --format=pnm --batch=scan%d.pnm --source "ADF Duplex" \
+      --mode Color --resolution 300 --page-width 216 --page-height 279</code></pre>
           </section>
 
           <section>
@@ -770,7 +794,7 @@ class DocumentFeederSource(StrEnum):
     FRONT = "ADF Front"
     BACK = "ADF Back"
     DUPLEX = "ADF Duplex"</code></pre>
-            <div class="fragment">
+            <div>
               <p><small>StrEnum (Python 3.11+) makes these usable directly in CLI commands</small></p>
             </div>
           </section>
@@ -834,9 +858,12 @@ class DocumentFeederSource(StrEnum):
     "--page-width", str(page_width),   # mm
     "--page-height", str(page_height), # mm
 ])</code></pre>
+<div>
+  <p><small>This goes in another async function.</small></p>
+</div>
           </section>
 
-          <section>
+          <!-- <section>
             <h2>Temporary File Management</h2>
             <pre><code class="language-python">from tempfile import TemporaryDirectory
 
@@ -857,7 +884,7 @@ async def scan(self, ...):
         pnm_files = sorted(temp_path.glob("scan*.pnm"))
 
     # temp_dir automatically cleaned up here!</code></pre>
-          </section>
+          </section> -->
 
           <section>
             <h2>Image Processing with Pillow</h2>
@@ -905,7 +932,7 @@ for img in images:
     img.close()</code></pre>
           </section>
 
-          <section>
+          <!-- <section>
             <h2>Why PNM Format?</h2>
             <ul>
               <li class="fragment"><strong>Lossless</strong> - No compression artifacts</li>
@@ -916,11 +943,11 @@ for img in images:
             <div class="fragment pro-tip">
               <strong>Tip:</strong> Use PNM/PPM for intermediate files, convert to final format at the end
             </div>
-          </section>
+          </section> -->
         </section>
 
         <!-- Part 5: User Experience -->
-        <section>
+        <!-- <section>
           <section>
             <h1>Part 5</h1>
             <h2>User Experience</h2>
@@ -1032,7 +1059,7 @@ def on_input_submitted(self, event: Input.Submitted):
     # React to Enter key
     pass</code></pre>
           </section>
-        </section>
+        </section> -->
 
         <!-- Demo -->
         <section>
@@ -1072,16 +1099,16 @@ uv run quickscan</code></pre>
         </section>
 
         <!-- Q&A -->
-        <section>
+        <!-- <section>
           <h1>Questions?</h1>
-        </section>
+        </section> -->
 
         <!-- Thank You -->
-        <section>
+        <!-- <section>
           <h2>Join the Cleveland Tech Slack</h2>
           <p><a href="https://cleveland-tech.vercel.app/">cleveland-tech.vercel.app</a></p>
           <img src="assets/qr-tech-slack.gif" style="width: 30%;">
-        </section>
+        </section> -->
 
       </div>
     </div>
