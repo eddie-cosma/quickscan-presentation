@@ -359,6 +359,55 @@ class QuickScan(App[None]):
             </ul>
           </section>
 
+            <section>
+            <h2>Built-in Widgets</h2>
+            <div class="two-column" style="font-size: 0.8em;">
+              <div>
+                <h4>Display</h4>
+                <ul>
+                  <li>Static, Label</li>
+                  <li>DataTable</li>
+                  <li>Tree</li>
+                  <li>Markdown</li>
+                  <li>Log</li>
+                  <li>LoadingIndicator</li>
+                </ul>
+              </div>
+              <div>
+                <h4>Input</h4>
+                <ul>
+                  <li>Button</li>
+                  <li>Input, TextArea</li>
+                  <li>Select, SelectionList</li>
+                  <li>Checkbox, Switch</li>
+                  <li>RadioSet</li>
+                  <li>ListView</li>
+                </ul>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Custom Widgets</h2>
+            <pre><code class="language-python">class PresetSelector(ListView):
+    """Custom ListView that emits preset selection messages"""
+
+    class PresetSelected(Message):
+        """Posted when a preset is selected"""
+        def __init__(self, preset: ScanPreset) -> None:
+            self.preset = preset
+            super().__init__()
+
+    def __init__(self, presets):
+        super().__init__(*[ListItem(Label(p.label)) for p in presets])
+        self.presets = presets
+
+    def on_list_view_selected(self, event):
+        idx = event.index
+        preset = self.presets[idx]
+        self.post_message(self.PresetSelected(preset))</code></pre>
+          </section>
+
           <section>
             <h2>Composition Pattern</h2>
             <pre><code class="language-python">def compose(self) -> ComposeResult:
@@ -414,55 +463,6 @@ class QuickScan(App[None]):
 │  Footer                                                      │
 └──────────────────────────────────────────────────────────────┘
             </pre>
-          </section>
-
-          <section>
-            <h2>Built-in Widgets</h2>
-            <div class="two-column" style="font-size: 0.8em;">
-              <div>
-                <h4>Display</h4>
-                <ul>
-                  <li>Static, Label</li>
-                  <li>DataTable</li>
-                  <li>Tree</li>
-                  <li>Markdown</li>
-                  <li>Log</li>
-                  <li>LoadingIndicator</li>
-                </ul>
-              </div>
-              <div>
-                <h4>Input</h4>
-                <ul>
-                  <li>Button</li>
-                  <li>Input, TextArea</li>
-                  <li>Select, SelectionList</li>
-                  <li>Checkbox, Switch</li>
-                  <li>RadioSet</li>
-                  <li>ListView</li>
-                </ul>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h2>Custom Widgets</h2>
-            <pre><code class="language-python">class PresetSelector(ListView):
-    """Custom ListView that emits preset selection messages"""
-
-    class PresetSelected(Message):
-        """Posted when a preset is selected"""
-        def __init__(self, preset: ScanPreset) -> None:
-            self.preset = preset
-            super().__init__()
-
-    def __init__(self, presets):
-        super().__init__(*[ListItem(Label(p.label)) for p in presets])
-        self.presets = presets
-
-    def on_list_view_selected(self, event):
-        idx = event.index
-        preset = self.presets[idx]
-        self.post_message(self.PresetSelected(preset))</code></pre>
           </section>
 
           <section>
